@@ -19,16 +19,18 @@
 	<key>STORAGE_BUCKET</key>
 	<string>messenger-84eb3.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
-	<false></false>
+	<false/>
 	<key>IS_ANALYTICS_ENABLED</key>
-	<false></false>
+	<false/>
 	<key>IS_APPINVITE_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>IS_GCM_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>IS_SIGNIN_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>GOOGLE_APP_ID</key>
 	<string>1:77731833282:ios:a56c05734d2a9dfc4d625b</string>
+	<key>DATABASE_URL</key>
+	<string>https://messenger-84eb3-default-rtdb.europe-west1.firebasedatabase.app</string>
 </dict>
 </plist>

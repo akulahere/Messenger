@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		2A4E55E98F61EDED6D0E4929 /* Pods_Messenger.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E24FD89ED7EF1E78665D102 /* Pods_Messenger.framework */; };
 		665132D8296C1B260094363C /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 665132D7296C1B260094363C /* GoogleService-Info.plist */; };
+		66B8081A296EB7C000BBFA3A /* DatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66B80819296EB7C000BBFA3A /* DatabaseManager.swift */; };
 		66F21DA42966D3790076F365 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66F21DA32966D3790076F365 /* AppDelegate.swift */; };
 		66F21DA62966D3790076F365 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66F21DA52966D3790076F365 /* SceneDelegate.swift */; };
 		66F21DA82966D3790076F365 /* ConversationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66F21DA72966D3790076F365 /* ConversationViewController.swift */; };
@@ -27,6 +28,7 @@
 /* Begin PBXFileReference section */
 		2E24FD89ED7EF1E78665D102 /* Pods_Messenger.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Messenger.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		665132D7296C1B260094363C /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		66B80819296EB7C000BBFA3A /* DatabaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseManager.swift; sourceTree = "<group>"; };
 		66F21DA02966D3790076F365 /* Messenger.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Messenger.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		66F21DA32966D3790076F365 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		66F21DA52966D3790076F365 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -140,6 +142,7 @@
 				66F21DA32966D3790076F365 /* AppDelegate.swift */,
 				66F21DA52966D3790076F365 /* SceneDelegate.swift */,
 				66F21DCB2968299B0076F365 /* Extensions.swift */,
+				66B80819296EB7C000BBFA3A /* DatabaseManager.swift */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -288,6 +291,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				66F21DBE2966F8E60076F365 /* LoginViewController.swift in Sources */,
+				66B8081A296EB7C000BBFA3A /* DatabaseManager.swift in Sources */,
 				66F21DC02966F8F30076F365 /* RegisterViewController.swift in Sources */,
 				66F21DC62966F93C0076F365 /* NewConversationViewController.swift in Sources */,
 				66F21DA82966D3790076F365 /* ConversationViewController.swift in Sources */,
