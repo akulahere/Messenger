@@ -8,6 +8,8 @@
 import UIKit
 import FirebaseAuth
 import FBSDKLoginKit
+import GoogleSignIn
+import GoogleSignInSwift
 
 class LoginViewController: UIViewController {
   
@@ -72,14 +74,28 @@ class LoginViewController: UIViewController {
     return button
   }()
   
+  private let googleLogInButton = GIDSignInButton()
+
+  private var loginObserver: NSObjectProtocol?
+  
   override func viewDidLoad() {
     super.viewDidLoad()
+    
+    loginObserver = NotificationCenter.default.addObserver(forName: .didLogInNotification, object: nil, queue: .main, using: {[weak self] _ in
+      guard let strongSelf = self else {
+        return
+      }
+      strongSelf.navigationController?.dismiss(animated: true, completion: {})
+      
+    })
+    
     title = "Log In"
     view.backgroundColor = .white
     navigationItem.rightBarButtonItem  = UIBarButtonItem(title: "Register", style: .done, target: self, action: #selector(didTapRegister))
     
     
     loginButton.addTarget(self, action: #selector(loginButtonTapped), for: .touchUpInside)
+    googleLogInButton.addTarget(self, action: #selector(googleSignInButtonTapped), for: .touchUpInside)
     
     emailField.delegate = self
     passwordField.delegate = self
@@ -93,8 +109,14 @@ class LoginViewController: UIViewController {
     scrollView.addSubview(passwordField)
     scrollView.addSubview(loginButton)
     scrollView.addSubview(fbLoginButton)
+    scrollView.addSubview(googleLogInButton)
     
-    
+  }
+  
+  deinit {
+    if let observer = loginObserver {
+      NotificationCenter.default.removeObserver(observer)
+    }
   }
   
   override func viewDidLayoutSubviews() {
@@ -108,6 +130,61 @@ class LoginViewController: UIViewController {
     
     fbLoginButton.frame = CGRect(x: 30, y: passwordField.bottom + 10, width: scrollView.width - 60, height: 52 )
     fbLoginButton.frame.origin.y = loginButton.bottom + 20
+    
+    googleLogInButton.frame = CGRect(x: 30, y: passwordField.bottom + 10, width: scrollView.width - 60, height: 52 )
+    googleLogInButton.frame.origin.y = fbLoginButton.bottom + 20
+  }
+  //Google Sign In
+  
+  @objc private func googleSignInButtonTapped() {
+
+    
+    
+    GIDSignIn.sharedInstance.signIn(withPresenting: self) {signInResult, error in
+      guard error == nil else {
+        return
+      }
+      guard let signInResult = signInResult else { return }
+      
+      let user = signInResult.user
+      
+      guard let emailAddress = user.profile?.email else {
+        // no email on google user
+        return
+      }
+      
+      let firstName = user.profile?.givenName ?? "No first name"
+      let lastName = user.profile?.familyName ?? "No second name"
+      //      let profilePicUrl = user.profile?.imageURL(withDimension: 320)
+
+      DatabaseManager.shared.userExists(with: emailAddress) { exists in
+        if !exists {
+          // add new user to DB
+          DatabaseManager.shared.insertUser(with: ChatAppUser(firstName: firstName, lastName: lastName, emailAdress: emailAddress))
+        }
+      }
+      
+      let accessToken = user.accessToken.tokenString
+      guard let idToken = user.idToken?.tokenString else { return }
+      let credential = GoogleAuthProvider.credential(withIDToken: idToken,
+                                                       accessToken: accessToken)
+      
+      Auth.auth().signIn(with: credential) { [weak self] authResult, error in
+        guard let strongSelf = self else {
+          return
+        }
+        guard let result = authResult, error == nil else {
+          print("Failed to log in user with email: \(emailAddress)")
+          return
+        }
+        
+        let user = result.user
+        print("Logged in \(user)")
+        strongSelf.navigationController?.dismiss(animated: true)
+      }
+      
+      NotificationCenter.default.post(name: .didLogInNotification, object: nil)
+    }
   }
   
   @objc private func loginButtonTapped() {
