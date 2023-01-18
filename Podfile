@@ -12,5 +12,11 @@ target 'Messenger' do
   pod 'FBSDKLoginKit'
 #Google Sign In 
   pod 'GoogleSignIn'
-  pod 'GoogleSignInSwift' 
+  pod 'GoogleSignInSwift'
+
+  pod 'MessageKit'
+  pod 'JGProgressHUD'
+  pod 'RealmSwift'
+  pod 'SDWebImage'
+    
 end
