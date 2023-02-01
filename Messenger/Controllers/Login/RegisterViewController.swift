@@ -193,11 +193,28 @@ class RegisterViewController: UIViewController {
       
       FirebaseAuth.Auth.auth().createUser(withEmail: email, password: password) {authResult, error in
         guard authResult != nil, error == nil else {
-          print(error?.localizedDescription)
           return
         }
         
-        DatabaseManager.shared.insertUser(with: ChatAppUser(firstName: firstName, lastName: lastName, emailAdress: email))
+        let chatUser = ChatAppUser(firstName: firstName, lastName: lastName, emailAdress: email)
+        DatabaseManager.shared.insertUser(with: chatUser, completion: {success in
+          if success {
+            // upload image
+            guard let image = strongSelf.imageView.image, let data = image.pngData() else {
+              return
+            }
+            let fileName = chatUser.profilePictureFileName
+            StorageManager.shared.uploadProfilePicture(with: data, fileName: fileName) { result in
+              switch result {
+              case .success(let downloadURL):
+                UserDefaults.standard.set(downloadURL, forKey: "profile_picture_url")
+                print(downloadURL)
+              case .failure(let error):
+                print("Storage manager error: \(error)")
+              }
+            }
+          }
+        })
         strongSelf.navigationController?.dismiss(animated: true)
 
       }

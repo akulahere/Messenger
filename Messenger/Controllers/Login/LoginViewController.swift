@@ -77,7 +77,7 @@ class LoginViewController: UIViewController {
   }()
   
   private let googleLogInButton = GIDSignInButton()
-
+  
   private var loginObserver: NSObjectProtocol?
   
   override func viewDidLoad() {
@@ -139,9 +139,7 @@ class LoginViewController: UIViewController {
   //Google Sign In
   
   @objc private func googleSignInButtonTapped() {
-
-    
-    
+    //MARK: Google SignIn
     GIDSignIn.sharedInstance.signIn(withPresenting: self) {signInResult, error in
       guard error == nil else {
         return
@@ -155,21 +153,49 @@ class LoginViewController: UIViewController {
         return
       }
       
+      UserDefaults.standard.set(emailAddress, forKey: "email")
+
       let firstName = user.profile?.givenName ?? "No first name"
       let lastName = user.profile?.familyName ?? "No second name"
       //      let profilePicUrl = user.profile?.imageURL(withDimension: 320)
-
+      
       DatabaseManager.shared.userExists(with: emailAddress) { exists in
         if !exists {
           // add new user to DB
-          DatabaseManager.shared.insertUser(with: ChatAppUser(firstName: firstName, lastName: lastName, emailAdress: emailAddress))
+          let chatUser = ChatAppUser(firstName: firstName, lastName: lastName, emailAdress: emailAddress)
+          DatabaseManager.shared.insertUser(with: chatUser, completion: {success in
+            if success {
+              // upload image
+              if user.profile?.hasImage != nil {
+                guard let url = user.profile?.imageURL(withDimension: 200) else {
+                  return
+                }
+                URLSession.shared.dataTask(with: url) { data, _, _ in
+                  guard let data else {
+                    return
+                  }
+                  
+                  let fileName = chatUser.profilePictureFileName
+                  StorageManager.shared.uploadProfilePicture(with: data, fileName: fileName) { result in
+                    switch result {
+                    case .success(let downloadURL):
+                      UserDefaults.standard.set(downloadURL, forKey: "profile_picture_url")
+                      print(downloadURL)
+                    case .failure(let error):
+                      print("Storage manager error: \(error)")
+                    }
+                  }
+                }.resume()
+              }
+            }
+          })
         }
       }
       
       let accessToken = user.accessToken.tokenString
       guard let idToken = user.idToken?.tokenString else { return }
       let credential = GoogleAuthProvider.credential(withIDToken: idToken,
-                                                       accessToken: accessToken)
+                                                     accessToken: accessToken)
       
       Auth.auth().signIn(with: credential) { [weak self] authResult, error in
         guard let strongSelf = self else {
@@ -196,7 +222,7 @@ class LoginViewController: UIViewController {
       alertUserLoginError()
       return
     }
-    //TODO: Firebase login
+
     spinner.show(in: view)
     FirebaseAuth.Auth.auth().signIn(withEmail: email, password: password) {[weak self] authResult, error in
       guard let strongSelf = self else {
@@ -213,6 +239,8 @@ class LoginViewController: UIViewController {
       }
       
       let user = result.user
+      
+      UserDefaults.standard.set(email, forKey: "email")
       print("Logged in \(user)")
       strongSelf.navigationController?.dismiss(animated: true)
     }
@@ -265,7 +293,7 @@ extension LoginViewController: LoginButtonDelegate {
       return
     }
     
-    let facebookRequest = FBSDKLoginKit.GraphRequest(graphPath: "me", parameters: ["fields": "email, name"], tokenString: token, version: nil, httpMethod: .get)
+    let facebookRequest = FBSDKLoginKit.GraphRequest(graphPath: "me", parameters: ["fields": "email, first_name, last_name, picture.type(large)"], tokenString: token, version: nil, httpMethod: .get)
     
     facebookRequest.start { _, result, error in
       guard let result = result as? [String: Any], error == nil else {
@@ -274,20 +302,49 @@ extension LoginViewController: LoginButtonDelegate {
       }
       print("\(result)")
       
-      guard let userName = result["name"] as? String,
+      guard let firstName = result["first_name"] as? String,
+            let lastName = result["first_name"] as? String,
+            let picture = result["picture"] as? [String: Any],
+            let pictureData = picture["data"] as? [String: Any],
+            let pictureUrl = pictureData["url"] as? String,
             let email = result["email"] as? String else {
         print("Failed to get email and name from FB")
         return
       }
-      let nameComponents = userName.components(separatedBy: " ")
-      guard nameComponents.count == 2 else {
-        return
-      }
-      let firstName = nameComponents[0]
-      let lastName = nameComponents[1]
+      
+      UserDefaults.standard.set(email, forKey: "email")
+
       DatabaseManager.shared.userExists(with: email) { exists in
         if !exists {
-          DatabaseManager.shared.insertUser(with: ChatAppUser(firstName: firstName, lastName: lastName, emailAdress: email))
+          let chatUser = ChatAppUser(firstName: firstName, lastName: lastName, emailAdress: email)
+          DatabaseManager.shared.insertUser(with: chatUser, completion: {success in
+            if success {
+              guard let url = URL(string: pictureUrl) else {
+                print("Downloading data from facebook image")
+                return
+              }
+              URLSession.shared.dataTask(with: url) { data, _, _ in
+                guard let data = data else {
+                  print("Failed to get data from facebook")
+                  return
+                }
+                
+                print("Got data from FB, uploading...")
+                // upload image
+                
+                let fileName = chatUser.profilePictureFileName
+                StorageManager.shared.uploadProfilePicture(with: data, fileName: fileName) { result in
+                  switch result {
+                  case .success(let downloadURL):
+                    UserDefaults.standard.set(downloadURL, forKey: "profile_picture_url")
+                    print(downloadURL)
+                  case .failure(let error):
+                    print("Storage manager error: \(error)")
+                  }
+                }
+              }.resume()
+            }
+          })
         }
       }
       let credential = FacebookAuthProvider.credential(withAccessToken: token)
